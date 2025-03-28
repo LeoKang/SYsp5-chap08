@@ -2,10 +2,12 @@ package com.example.sp5_chap08.spring;
 
 import org.apache.tomcat.jdbc.pool.DataSource;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.PreparedStatementCreator;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.List;
 
 public class MemberDao {
@@ -62,8 +64,24 @@ public class MemberDao {
             return results.isEmpty() ? null : results.get(0);
         }
     */
-    public void insert(Member member) {
+    public void insert(final Member member) {
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+        jdbcTemplate.update(new PreparedStatementCreator() {
+            @Override
+            public PreparedStatement createPreparedStatement(Connection con) throws SQLException {
+                PreparedStatement pstmt = con.prepareStatement(
+                        "insert into MEMBER (EMAIL, PASSWORD, NAME, REGDATE)" + "values (?,?,?,?)",
+                        new String[] {"ID"});
+                pstmt.setString(1, member.getEmail());
+                pstmt.setString(2, member.getPassword());
+                pstmt.setString(3, member.getName());
+                pstmt.setTimestamp(4, Timestamp.valueOf(member.getRegisterDateTime()));
 
+                return pstmt;
+            }
+        }, keyHolder);
+        Number keyValue = keyHolder.getKey();
+        member.setId(keyValue.longValue());
     }
 
     public void update(Member member) {
@@ -75,7 +93,6 @@ public class MemberDao {
 
     public List<Member> selectAll() {
         List<Member> result = jdbcTemplate.query("select * from MEMBER", new RowMapper<Member>() {
-
             @Override
             public Member mapRow(ResultSet rs, int rowNum) throws SQLException {
                 Member member = new Member(
