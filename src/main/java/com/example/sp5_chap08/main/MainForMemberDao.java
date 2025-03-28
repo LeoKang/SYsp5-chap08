@@ -1,0 +1,31 @@
+package com.example.sp5_chap08.main;
+
+import com.example.sp5_chap08.spring.Member;
+import com.example.sp5_chap08.spring.MemberDao;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import com.example.sp5_chap08.config.AppCtx;
+
+import java.util.List;
+
+public class MainForMemberDao {
+    private static MemberDao memberDao;
+
+    public static void main(String[] args) {
+        AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(AppCtx.class);
+        memberDao = ctx.getBean(MemberDao.class);
+
+        selectAll();
+
+        ctx.close();
+    }
+
+    private static void selectAll() {
+        System.out.println("----- selectAll");
+        int total = memberDao.count();
+        System.out.println("전체 데이터: " + total);
+        List<Member> members = memberDao.selectAll();
+        for(Member m : members) {
+            System.out.println(m.getId() + ":" + m.getEmail() + ":" + m.getName());
+        }
+    }
+}
